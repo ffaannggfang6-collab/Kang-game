@@ -2,63 +2,116 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Kang Game</title>
+  <title>Thai Kang Online</title>
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <style>
-    body {
-      background:#111;
+    body{
+      background:#0f172a;
       color:#fff;
       font-family:sans-serif;
       text-align:center;
+      margin:0;
+      padding:0;
     }
-    .page { display:none; }
-    .active { display:block; }
-    button { padding:10px 20px; margin:10px; }
+    .page{ display:none; padding-top:40px; }
+    .page.active{ display:block; }
+    input,button{
+      padding:10px 18px;
+      margin:8px;
+      font-size:16px;
+      border-radius:6px;
+      border:none;
+    }
+    button{
+      background:#facc15;
+      cursor:pointer;
+    }
+    button:disabled{
+      background:#555;
+      cursor:not-allowed;
+    }
+    .room{
+      display:block;
+      width:220px;
+      margin:10px auto;
+    }
   </style>
 </head>
 <body>
 
-<div id="login-page" class="page active">
+<!-- ===== LOGIN ===== -->
+<div id="login" class="page active">
   <h1>THAI KANG ONLINE</h1>
   <input id="username" placeholder="ชื่อผู้เล่น">
   <br>
-  <button onclick="connectGame()">เข้าเกม</button>
+  <button onclick="login()">เข้าเกม</button>
 </div>
 
-<div id="lobby-page" class="page">
+<!-- ===== LOBBY ===== -->
+<div id="lobby" class="page">
   <h2>ล็อบบี้</h2>
-  เครดิต: <span id="user-credit">0</span>
-  <br>
-  <button onclick="joinRoom(20)">ห้อง 20</button>
+  <p>เครดิต: <span id="credit">0</span></p>
+  <div id="rooms"></div>
 </div>
 
 <script>
 let socket;
 
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+/* ===== PAGE SWITCH ===== */
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('active');
+  });
   document.getElementById(id).classList.add('active');
 }
 
-function connectGame(){
-  const name = document.getElementById('username').value;
-  if(!name){ alert('ใส่ชื่อก่อน'); return; }
+/* ===== LOGIN ===== */
+function login(){
+  const name = document.getElementById('username').value.trim();
+  if(!name){
+    alert('กรุณาใส่ชื่อ');
+    return;
+  }
 
   socket = io(window.location.origin);
 
-  socket.on('connect', ()=>{
-    socket.emit('login', name);
-    showPage('lobby-page');
+  socket.on('login_success', (data)=>{
+    document.getElementById('credit').innerText = data.user.credit;
+    renderRooms(data.rooms);
+    show('lobby');
   });
 
-  socket.on('update_data', (data)=>{
-    document.getElementById('user-credit').innerText = data.credit;
+  socket.on('room_update', (rooms)=>{
+    renderRooms(rooms);
+  });
+
+  socket.on('room_full', ()=>{
+    alert('ห้องเต็มแล้ว (5 คน)');
+  });
+
+  socket.emit('login', name);
+}
+
+/* ===== ROOM LIST ===== */
+function renderRooms(rooms){
+  const roomDiv = document.getElementById('rooms');
+  roomDiv.innerHTML = '';
+
+  Object.keys(rooms).forEach(price=>{
+    const count = rooms[price];
+    const btn = document.createElement('button');
+    btn.className = 'room';
+    btn.innerText = `ห้อง ${price} เครดิต (${count}/5)`;
+    btn.disabled = count >= 5;
+    btn.onclick = ()=> joinRoom(price);
+    roomDiv.appendChild(btn);
   });
 }
 
+/* ===== JOIN ===== */
 function joinRoom(price){
   socket.emit('join_room', price);
-  alert('เข้าห้อง ' + price);
+  alert('เข้าห้อง ' + price + ' เครดิต');
 }
 </script>
 
