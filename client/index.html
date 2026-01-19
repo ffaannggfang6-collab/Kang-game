@@ -1,119 +1,64 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>Thai Kang Online</title>
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <style>
-    body{
-      background:#0f172a;
-      color:#fff;
-      font-family:sans-serif;
-      text-align:center;
-      margin:0;
-      padding:0;
-    }
-    .page{ display:none; padding-top:40px; }
-    .page.active{ display:block; }
-    input,button{
-      padding:10px 18px;
-      margin:8px;
-      font-size:16px;
-      border-radius:6px;
-      border:none;
-    }
-    button{
-      background:#facc15;
-      cursor:pointer;
-    }
-    button:disabled{
-      background:#555;
-      cursor:not-allowed;
-    }
-    .room{
-      display:block;
-      width:220px;
-      margin:10px auto;
-    }
-  </style>
-</head>
-<body>
-
-<!-- ===== LOGIN ===== -->
-<div id="login" class="page active">
-  <h1>THAI KANG ONLINE</h1>
-  <input id="username" placeholder="ชื่อผู้เล่น">
-  <br>
-  <button onclick="login()">เข้าเกม</button>
-</div>
-
-<!-- ===== LOBBY ===== -->
-<div id="lobby" class="page">
-  <h2>ล็อบบี้</h2>
-  <p>เครดิต: <span id="credit">0</span></p>
-  <div id="rooms"></div>
-</div>
-
 <script>
 let socket;
+let myRoom = null;
 
-/* ===== PAGE SWITCH ===== */
 function show(id){
-  document.querySelectorAll('.page').forEach(p=>{
-    p.classList.remove('active');
-  });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-/* ===== LOGIN ===== */
 function login(){
-  const name = document.getElementById('username').value.trim();
-  if(!name){
-    alert('กรุณาใส่ชื่อ');
-    return;
-  }
+  const name = document.getElementById('username').value;
+  if(!name) return alert('ใส่ชื่อก่อน');
 
   socket = io(window.location.origin);
 
-  socket.on('login_success', (data)=>{
-    document.getElementById('credit').innerText = data.user.credit;
+  socket.on('login_success',(data)=>{
+    document.getElementById('credit').innerText = data.credit;
     renderRooms(data.rooms);
     show('lobby');
   });
 
-  socket.on('room_update', (rooms)=>{
-    renderRooms(rooms);
+  socket.on('room_update', renderRooms);
+  socket.on('room_full', ()=>alert('ห้องเต็ม'));
+
+  socket.on('start_round',(data)=>{
+    myRoom = data.price;
+    document.getElementById('room-price').innerText = myRoom;
+    updateHand(data.hand, data.score);
+    show('game');
   });
 
-  socket.on('room_full', ()=>{
-    alert('ห้องเต็มแล้ว (5 คน)');
+  socket.on('update_hand',(data)=>{
+    updateHand(data.hand, data.score);
+  });
+
+  socket.on('round_result',(res)=>{
+    alert(`ผู้ชนะ: ${res.winner}\nได้ ${res.win} เครดิต`);
+    document.getElementById('credit').innerText = res.credit;
+    show('lobby');
   });
 
   socket.emit('login', name);
 }
 
-/* ===== ROOM LIST ===== */
 function renderRooms(rooms){
-  const roomDiv = document.getElementById('rooms');
-  roomDiv.innerHTML = '';
-
-  Object.keys(rooms).forEach(price=>{
-    const count = rooms[price];
-    const btn = document.createElement('button');
-    btn.className = 'room';
-    btn.innerText = `ห้อง ${price} เครดิต (${count}/5)`;
-    btn.disabled = count >= 5;
-    btn.onclick = ()=> joinRoom(price);
-    roomDiv.appendChild(btn);
+  const div = document.getElementById('rooms');
+  div.innerHTML='';
+  Object.keys(rooms).forEach(p=>{
+    const btn=document.createElement('button');
+    btn.innerText=`ห้อง ${p} (${rooms[p]}/5)`;
+    btn.onclick=()=>socket.emit('join_room',p);
+    div.appendChild(btn);
   });
 }
 
-/* ===== JOIN ===== */
-function joinRoom(price){
-  socket.emit('join_room', price);
-  alert('เข้าห้อง ' + price + ' เครดิต');
+function updateHand(hand,score){
+  document.getElementById('hand').innerText = hand.join(' , ');
+  document.getElementById('score').innerText = score;
+}
+
+function action(type){
+  socket.emit('action', type);
 }
 </script>
-
-</body>
-</html>
