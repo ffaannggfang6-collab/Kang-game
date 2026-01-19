@@ -2,23 +2,65 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>Thai Kang Online</title>
+  <title>Kang Game</title>
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <style>
+    body {
+      background:#111;
+      color:#fff;
+      font-family:sans-serif;
+      text-align:center;
+    }
+    .page { display:none; }
+    .active { display:block; }
+    button { padding:10px 20px; margin:10px; }
+  </style>
 </head>
 <body>
+
+<div id="login-page" class="page active">
   <h1>THAI KANG ONLINE</h1>
-  <input id="name" placeholder="ชื่อผู้เล่น">
-  <button onclick="login()">เข้าเกม</button>
+  <input id="username" placeholder="ชื่อผู้เล่น">
+  <br>
+  <button onclick="connectGame()">เข้าเกม</button>
+</div>
 
-  <script>
-    const socket = io();
+<div id="lobby-page" class="page">
+  <h2>ล็อบบี้</h2>
+  เครดิต: <span id="user-credit">0</span>
+  <br>
+  <button onclick="joinRoom(20)">ห้อง 20</button>
+</div>
 
-    function login() {
-      const name = document.getElementById('name').value;
-      socket.emit('login', name);
-    }
+<script>
+let socket;
 
-    socket.on('update_data', d => console.log(d));
-  </script>
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function connectGame(){
+  const name = document.getElementById('username').value;
+  if(!name){ alert('ใส่ชื่อก่อน'); return; }
+
+  socket = io(window.location.origin);
+
+  socket.on('connect', ()=>{
+    socket.emit('login', name);
+    showPage('lobby-page');
+  });
+
+  socket.on('update_data', (data)=>{
+    document.getElementById('user-credit').innerText = data.credit;
+  });
+}
+
+function joinRoom(price){
+  socket.emit('join_room', price);
+  alert('เข้าห้อง ' + price);
+}
+</script>
+
 </body>
 </html>
