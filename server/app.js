@@ -1,23 +1,30 @@
 const express = require('express');
+const http = require('http');
 const path = require('path');
+const cors = require('cors');
+
 const app = express();
-const server = require('http').createServer(app);
-const io = require('socket.io')(server);
+const server = http.createServer(app);
 
-require('./socket')(io);
+// ===== middleware =====
+app.use(cors());
+app.use(express.json());
 
-// 🔥 สำคัญ
-const CLIENT_PATH = path.join(__dirname, '..', 'client');
-
-// serve client
+// ===== serve client =====
+const CLIENT_PATH = path.join(__dirname, '../client');
 app.use(express.static(CLIENT_PATH));
 
-// route หลัก
 app.get('/', (req, res) => {
   res.sendFile(path.join(CLIENT_PATH, 'index.html'));
 });
 
+// ===== health check =====
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// ===== start server =====
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log('SERVER RUNNING ON', PORT);
+  console.log('KANG GAME SERVER RUNNING ON PORT', PORT);
 });
