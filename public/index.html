@@ -10,10 +10,7 @@ const server = http.createServer(app);
 
 // ================= SOCKET =================
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: "*" }
 });
 
 // ================= DATABASE =================
@@ -22,14 +19,15 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ MongoDB error:', err.message));
 
 // ================= FRONTEND =================
-// เสิร์ฟ frontend จาก client
+// ใช้ client เป็น frontend
 app.use(express.static(path.join(__dirname, 'client')));
 
+// หน้าแรก → โหลด index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'index.html'));
 });
 
-// route ไว้เช็คว่า server ยังรันอยู่
+// เช็คสถานะเซิร์ฟเวอร์
 app.get('/status', (req, res) => {
   res.send('Kang game server running');
 });
@@ -91,11 +89,7 @@ io.on('connection', (socket) => {
 
     user.credit += netWin;
 
-    socket.emit('game_result', {
-      netWin,
-      totalFee
-    });
-
+    socket.emit('game_result', { netWin, totalFee });
     socket.emit('update_data', user);
   });
 
