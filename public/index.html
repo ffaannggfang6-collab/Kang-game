@@ -22,12 +22,11 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ MongoDB error:', err.message));
 
 // ================= FRONTEND =================
-// บอก express ให้เสิร์ฟไฟล์ในโฟลเดอร์ public
-app.use(express.static(path.join(__dirname, 'public')));
+// เสิร์ฟ frontend จาก client
+app.use(express.static(path.join(__dirname, 'client')));
 
-// หน้าแรก → โหลด index.html
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'client', 'index.html'));
 });
 
 // route ไว้เช็คว่า server ยังรันอยู่
