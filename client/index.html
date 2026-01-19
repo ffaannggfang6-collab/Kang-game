@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>THAI KANG DEMO</h2>
+<input id="name" placeholder="ชื่อ">
+<button onclick="join()">เข้าโต๊ะ</button>
+<button onclick="kang()">แคง</button>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io("http://localhost:3000");
+
+function join(){
+  socket.emit("join",{room:"room20",name:name.value});
+}
+
+function kang(){
+  socket.emit("action",{room:"room20",type:"KANG"});
+}
+
+socket.on("cards",c=>{
+  alert("ไพ่คุณ: "+JSON.stringify(c));
+});
+
+socket.on("end",r=>{
+  alert("ผู้ชนะคือ "+r.winner);
+});
+</script>
+</body>
+</html>
