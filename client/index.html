@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Thai Kang Online</title>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>THAI KANG ONLINE</h1>
+  <input id="name" placeholder="ชื่อผู้เล่น">
+  <button onclick="login()">เข้าเกม</button>
+
+  <script>
+    const socket = io();
+
+    function login() {
+      const name = document.getElementById('name').value;
+      socket.emit('login', name);
+    }
+
+    socket.on('update_data', d => console.log(d));
+  </script>
+</body>
+</html>
