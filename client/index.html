@@ -3,9 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <title>Kang Game</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 80px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 5px;
+    }
+  </style>
 </head>
-<body style="background:#111;color:#fff;text-align:center;">
+<body>
+
   <h1>🐉 KANG GAME ONLINE</h1>
-  <p>ระบบพร้อมใช้งาน</p>
+
+  <div id="login">
+    <input id="username" placeholder="ชื่อผู้เล่น" />
+    <br>
+    <button onclick="login()">เข้าเกม</button>
+  </div>
+
+  <div id="lobby" style="display:none;">
+    <h2>ล็อบบี้</h2>
+    <p id="playerInfo"></p>
+  </div>
+
+  <script>
+    async function login() {
+      const username = document.getElementById('username').value;
+
+      if (!username) {
+        alert('กรุณาใส่ชื่อผู้เล่น');
+        return;
+      }
+
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert('เข้าเกมไม่สำเร็จ');
+        return;
+      }
+
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('lobby').style.display = 'block';
+      document.getElementById('playerInfo').innerText =
+        `ผู้เล่น: ${data.player.username} | เครดิต: ${data.player.credit}`;
+    }
+  </script>
+
 </body>
 </html>
