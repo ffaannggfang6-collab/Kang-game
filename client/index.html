@@ -1,64 +1,11 @@
-<script>
-let socket;
-let myRoom = null;
-
-function show(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function login(){
-  const name = document.getElementById('username').value;
-  if(!name) return alert('ใส่ชื่อก่อน');
-
-  socket = io(window.location.origin);
-
-  socket.on('login_success',(data)=>{
-    document.getElementById('credit').innerText = data.credit;
-    renderRooms(data.rooms);
-    show('lobby');
-  });
-
-  socket.on('room_update', renderRooms);
-  socket.on('room_full', ()=>alert('ห้องเต็ม'));
-
-  socket.on('start_round',(data)=>{
-    myRoom = data.price;
-    document.getElementById('room-price').innerText = myRoom;
-    updateHand(data.hand, data.score);
-    show('game');
-  });
-
-  socket.on('update_hand',(data)=>{
-    updateHand(data.hand, data.score);
-  });
-
-  socket.on('round_result',(res)=>{
-    alert(`ผู้ชนะ: ${res.winner}\nได้ ${res.win} เครดิต`);
-    document.getElementById('credit').innerText = res.credit;
-    show('lobby');
-  });
-
-  socket.emit('login', name);
-}
-
-function renderRooms(rooms){
-  const div = document.getElementById('rooms');
-  div.innerHTML='';
-  Object.keys(rooms).forEach(p=>{
-    const btn=document.createElement('button');
-    btn.innerText=`ห้อง ${p} (${rooms[p]}/5)`;
-    btn.onclick=()=>socket.emit('join_room',p);
-    div.appendChild(btn);
-  });
-}
-
-function updateHand(hand,score){
-  document.getElementById('hand').innerText = hand.join(' , ');
-  document.getElementById('score').innerText = score;
-}
-
-function action(type){
-  socket.emit('action', type);
-}
-</script>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Kang Game</title>
+</head>
+<body style="background:#111;color:#fff;text-align:center;">
+  <h1>🐉 KANG GAME ONLINE</h1>
+  <p>ระบบพร้อมใช้งาน</p>
+</body>
+</html>
