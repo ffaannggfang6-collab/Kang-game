@@ -1,7 +1,7 @@
 {
   "name": "kang-game-server",
   "version": "1.0.0",
-  "description": "Thai Kang Online Server",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -10,10 +10,10 @@
     "node": ">=18"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "mongoose": "^8.1.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "cors": "^2.8.5"
+    "express": "^4.18.2",
+    "mongoose": "^8.1.0",
+    "socket.io": "^4.7.2"
   }
 }
