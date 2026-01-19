@@ -3,66 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <title>Kang Game</title>
-  <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      text-align: center;
-      padding-top: 80px;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 5px;
-    }
-  </style>
+  <script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
-
-  <h1>🐉 KANG GAME ONLINE</h1>
+<body style="background:#111;color:#fff;text-align:center;">
+  <h1>🐉 KANG GAME</h1>
 
   <div id="login">
-    <input id="username" placeholder="ชื่อผู้เล่น" />
-    <br>
+    <input id="username" placeholder="ชื่อผู้เล่น">
     <button onclick="login()">เข้าเกม</button>
   </div>
 
-  <div id="lobby" style="display:none;">
-    <h2>ล็อบบี้</h2>
-    <p id="playerInfo"></p>
+  <div id="lobby" style="display:none">
+    <h2>เลือกห้อง</h2>
+    <div id="rooms"></div>
   </div>
 
-  <script>
-    async function login() {
-      const username = document.getElementById('username').value;
+  <div id="room" style="display:none">
+    <h2>ผู้เล่นในห้อง</h2>
+    <ul id="players"></ul>
+    <button onclick="kang()">แคง</button>
+    <p id="result"></p>
+  </div>
 
-      if (!username) {
-        alert('กรุณาใส่ชื่อผู้เล่น');
-        return;
-      }
+<script>
+  const socket = io();
 
-      const res = await fetch('/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username })
-      });
+  function login(){
+    const name = username.value;
+    socket.emit('login', name);
+  }
 
-      const data = await res.json();
+  socket.on('login_success', data => {
+    login.style.display = 'none';
+    lobby.style.display = 'block';
 
-      if (!data.success) {
-        alert('เข้าเกมไม่สำเร็จ');
-        return;
-      }
-
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('lobby').style.display = 'block';
-      document.getElementById('playerInfo').innerText =
-        `ผู้เล่น: ${data.player.username} | เครดิต: ${data.player.credit}`;
+    for(const id in data.rooms){
+      rooms.innerHTML +=
+        `<button onclick="join(${id})">ห้อง ${id}</button><br>`;
     }
-  </script>
+  });
 
+  function join(id){
+    socket.emit('join_room', id);
+    lobby.style.display = 'none';
+    room.style.display = 'block';
+  }
+
+  socket.on('room_update', list => {
+    players.innerHTML = list.map(p => `<li>${p}</li>`).join('');
+  });
+
+  function kang(){
+    socket.emit('KANG');
+  }
+
+  socket.on('game_result', r => {
+    result.innerText = `ผู้ชนะ: ${r.winner} ได้ ${r.win} เครดิต`;
+  });
+</script>
 </body>
 </html>
