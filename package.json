@@ -1,13 +1,17 @@
 {
   "name": "kang-game",
   "version": "1.0.0",
+  "description": "Thai Kang Online",
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
     "mongoose": "^8.0.0",
     "cors": "^2.8.5"
   }
