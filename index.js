@@ -1,4 +1,3 @@
-// ================== IMPORT ==================
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -6,10 +5,10 @@ const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
-// ================== APP ==================
 const app = express();
 const server = http.createServer(app);
 
+// ================= SOCKET =================
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -17,41 +16,42 @@ const io = new Server(server, {
   }
 });
 
-// ================== MONGODB ==================
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose.connect(MONGO_URI)
+// ================= DATABASE =================
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ MongoDB error:', err));
+  .catch(err => console.error('❌ MongoDB error:', err.message));
 
-// ================== STATIC FRONTEND ==================
+// ================= FRONTEND =================
+// บอก express ให้เสิร์ฟไฟล์ในโฟลเดอร์ public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// หน้าแรก (แก้ปัญหาหน้าขาว)
+// หน้าแรก → โหลด index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ================== GAME CONFIG ==================
+// route ไว้เช็คว่า server ยังรันอยู่
+app.get('/status', (req, res) => {
+  res.send('Kang game server running');
+});
+
+// ================= GAME CONFIG =================
 const ROOM_CONFIG = {
   10: { fee: 1 },
   20: { fee: 1 },
   50: { fee: 1 },
   70: { fee: 2 },
-  100:{ fee: 2 }
+  100: { fee: 2 }
 };
 
 const MAX_PLAYERS = 5;
+const users = {};
+const rooms = {};
 
-// ห้องเกม
-let rooms = {}; 
-let users = {};
-
-// ================== SOCKET ==================
+// ================= SOCKET LOGIC =================
 io.on('connection', (socket) => {
-  console.log('🟢 Player connected:', socket.id);
+  console.log('🟢 connected:', socket.id);
 
-  // login
   socket.on('login', (username) => {
     users[socket.id] = {
       id: socket.id,
@@ -62,10 +62,8 @@ io.on('connection', (socket) => {
     socket.emit('update_data', users[socket.id]);
   });
 
-  // join room
   socket.on('join_room', (price) => {
     const roomId = `room_${price}`;
-
     if (!rooms[roomId]) rooms[roomId] = [];
 
     if (rooms[roomId].length >= MAX_PLAYERS) {
@@ -76,18 +74,15 @@ io.on('connection', (socket) => {
     rooms[roomId].push(socket.id);
     users[socket.id].room = roomId;
     socket.join(roomId);
-
-    console.log(`${users[socket.id].username} joined ${roomId}`);
   });
 
-  // kang
   socket.on('player_action', ({ type }) => {
     if (type !== 'KANG') return;
 
     const user = users[socket.id];
     if (!user || !user.room) return;
 
-    const price = parseInt(user.room.replace('room_', ''));
+    const price = Number(user.room.replace('room_', ''));
     const players = rooms[user.room].length;
     const fee = ROOM_CONFIG[price].fee;
 
@@ -97,8 +92,7 @@ io.on('connection', (socket) => {
 
     user.credit += netWin;
 
-    io.to(socket.id).emit('game_result', {
-      winner: socket.id,
+    socket.emit('game_result', {
       netWin,
       totalFee
     });
@@ -106,19 +100,17 @@ io.on('connection', (socket) => {
     socket.emit('update_data', user);
   });
 
-  // disconnect
   socket.on('disconnect', () => {
     const user = users[socket.id];
-    if (user && user.room && rooms[user.room]) {
+    if (user?.room) {
       rooms[user.room] = rooms[user.room].filter(id => id !== socket.id);
     }
     delete users[socket.id];
-    console.log('🔴 Player disconnected:', socket.id);
   });
 });
 
-// ================== START SERVER ==================
+// ================= START =================
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Kang Game running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
