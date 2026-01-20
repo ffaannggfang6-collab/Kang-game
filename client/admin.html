@@ -1,0 +1,10 @@
+<!-- client/admin.html -->
+<!doctype html><html><body>
+<h3>ADMIN</h3>
+<button onclick="load()">Users</button>
+<button onclick="deps()">Deposits</button>
+<pre id="out"></pre>
+<script>
+async function load(){ out.textContent=JSON.stringify(await (await fetch('/admin/users')).json(),null,2); }
+async function deps(){ out.textContent=JSON.stringify(await (await fetch('/admin/deposits')).json(),null,2); }
+</script></body></html>
