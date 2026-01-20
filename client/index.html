@@ -1,70 +1,27 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>Kang Game</title>
-  <script src="/socket.io/socket.io.js"></script>
-  <style>
-    body {
-      background:#111;
-      color:#fff;
-      text-align:center;
-      font-family:sans-serif;
-      padding-top:80px;
-    }
-    input, button {
-      padding:10px;
-      font-size:16px;
-      margin:5px;
-    }
-  </style>
-</head>
-<body>
-
-<h1>🐉 KANG GAME</h1>
-
-<div id="loginBox">
-  <input id="usernameInput" placeholder="ชื่อผู้เล่น">
-  <br>
-  <button onclick="doLogin()">เข้าเกม</button>
-</div>
-
-<div id="lobby" style="display:none;">
-  <h2>ล็อบบี้</h2>
-  <p id="playerInfo"></p>
-</div>
-
+<!-- client/index.html -->
+<!doctype html><html><head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="/manifest.json">
+<style>body{background:#111;color:#fff;font-family:sans-serif}</style>
+</head><body>
+<input id="name" placeholder="ชื่อผู้เล่น">
+<button onclick="go()">เข้าเกม</button>
+<br>
+<button onclick="join(10)">10</button>
+<button onclick="join(20)">20</button>
+<button onclick="join(50)">50</button>
+<button onclick="join(70)">70</button>
+<button onclick="join(100)">100</button>
+<button onclick="fetch('/deposit/'+socket.id+'/100',{method:'POST'})">ฝากเดโม 100</button>
+<pre id="log"></pre>
+<script src="/socket.io/socket.io.js"></script>
 <script>
-  const socket = io();
-
-  socket.on('connect', () => {
-    console.log('socket connected');
-  });
-
-  function doLogin() {
-    const input = document.getElementById('usernameInput');
-    const name = input.value.trim();
-
-    if (!name) {
-      alert('กรุณาใส่ชื่อผู้เล่น');
-      return;
-    }
-
-    socket.emit('login', name);
-  }
-
-  socket.on('login_success', data => {
-    document.getElementById('loginBox').style.display = 'none';
-    document.getElementById('lobby').style.display = 'block';
-
-    document.getElementById('playerInfo').innerText =
-      `ชื่อ: ${data.username} | เครดิต: ${data.credit}`;
-  });
-
-  socket.on('error_msg', msg => {
-    alert(msg);
-  });
-</script>
-
-</body>
-</html>
+const socket=io(); const log=document.getElementById('log');
+function go(){ socket.emit('login',name.value.trim()); }
+function join(p){ socket.emit('join',p); }
+socket.on('login_success',u=>log.textContent='OK เครดิต '+u.credit);
+socket.on('room_update',n=>log.textContent='ในห้อง '+n.join(','));
+socket.on('game_end',r=>log.textContent=`ผู้ชนะ ${r.winner}\nได้ ${r.win}\nโบนัส ${r.bonus}`);
+socket.on('ai_action',d=>log.textContent='AI แทน '+d.player);
+if('serviceWorker'in navigator) navigator.serviceWorker.register('/sw.js');
+</script></body></html>
